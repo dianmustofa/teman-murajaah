@@ -86,6 +86,9 @@ document.addEventListener("DOMContentLoaded", function () {
     accuracyElement.textContent = `Akurasi: ${similarity.toFixed(2)}%`;
 
     startVoiceButton.textContent = "Mulai Bacaan";
+
+    const highlighted = highlightComparison(targetAyatText, transcript);
+    document.getElementById("highlightResult").innerHTML = highlighted;
   };
 
   recognition.onerror = (event) => {
@@ -98,8 +101,24 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   // Function to calculate similarity (optimized for multi-line texts)
+  // function calculateSimilarity(text1, text2) {
+  //   const cleanText1 = text1.replace(/[\s,،.؟]/g, "").toLowerCase();
+  //   const cleanText2 = text2.replace(/[\s,،.؟]/g, "").toLowerCase();
+
+  //   let matchCount = 0;
+  //   for (let i = 0; i < Math.min(cleanText1.length, cleanText2.length); i++) {
+  //     if (cleanText1[i] === cleanText2[i]) {
+  //       matchCount++;
+  //     }
+  //   }
+
+  //   return (matchCount / cleanText1.length) * 100;
+  // }
+
   function calculateSimilarity(text1, text2) {
-    const cleanText1 = text1.replace(/[\s,،.؟]/g, "").toLowerCase();
+    const cleanText1 = removeHarakat(text1)
+      .replace(/[\s,،.؟]/g, "")
+      .toLowerCase();
     const cleanText2 = text2.replace(/[\s,،.؟]/g, "").toLowerCase();
 
     let matchCount = 0;
@@ -110,5 +129,34 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     return (matchCount / cleanText1.length) * 100;
+  }
+
+  function removeHarakat(text) {
+    return text.replace(/[\u064B-\u0652]/g, ""); // Menghapus harakat seperti fathah, kasrah, dhammah, sukun, dll.
+  }
+
+  function highlightComparison(target, result) {
+    const cleanTarget = removeHarakat(target).replace(/[\s,،.؟]/g, "");
+    const cleanResult = result.replace(/[\s,،.؟]/g, "");
+
+    let outputHTML = "";
+
+    for (let i = 0; i < cleanTarget.length; i++) {
+      const charTarget = cleanTarget[i];
+      const charResult = cleanResult[i];
+
+      if (charResult === undefined) {
+        // Belum terbaca
+        outputHTML += `<span style="color: gray;">${charTarget}</span>`;
+      } else if (charResult === charTarget) {
+        // Benar
+        outputHTML += `<span style="color: green;">${charTarget}</span>`;
+      } else {
+        // Salah
+        outputHTML += `<span style="color: red;">${charTarget}</span>`;
+      }
+    }
+
+    return outputHTML;
   }
 });
